@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Family Details - SCAM DNA{% endblock %}
+
+{% block content %}
+<div class="family-detail-page">
+    <div class="page-header">
+        <h2>{{ insights.family.name }}</h2>
+        <p>Detailed analysis of scam family evolution</p>
+    </div>
+
+    <div class="family-overview">
+        <div class="overview-card">
+            <h3>Family Information</h3>
+            <div class="info-grid">
+                <div>
+                    <strong>Primary DNA Code:</strong>
+                    <code>{{ insights.family.primary_dna_code }}</code>
+                </div>
+                <div>
+                    <strong>Total Messages:</strong>
+                    {{ insights.total_messages }}
+                </div>
+                <div>
+                    <strong>Total Mutations:</strong>
+                    {{ insights.total_mutations }}
+                </div>
+                <div>
+                    <strong>Mutation Velocity:</strong>
+                    {{ insights.mutation_velocity }} per day
+                </div>
+            </div>
+        </div>
+
+        <div class="overview-card">
+            <h3>Evolution Prediction</h3>
+            <p class="prediction-text">{{ insights.prediction }}</p>
+        </div>
+    </div>
+
+    <div class="trends-section">
+        <div class="trend-card">
+            <h3>Top Emotional Signals</h3>
+            <div class="trend-list">
+                {% for signal, count in insights.emotional_trends.items() %}
+                <div class="trend-item">
+                    <span class="trend-name">{{ signal }}</span>
+                    <span class="trend-bar">
+                        <span class="trend-fill" style="width: {{ (count / insights.total_messages * 100) | int }}%"></span>
+                    </span>
+                    <span class="trend-count">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="trend-card">
+            <h3>Top Structural Markers</h3>
+            <div class="trend-list">
+                {% for marker, count in insights.structural_trends.items() %}
+                <div class="trend-item">
+                    <span class="trend-name">{{ marker }}</span>
+                    <span class="trend-bar">
+                        <span class="trend-fill" style="width: {{ (count / insights.total_messages * 100) | int }}%"></span>
+                    </span>
+                    <span class="trend-count">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="back-link">
+        <a href="{{ url_for('main.families') }}" class="btn-secondary">← Back to Families</a>
+    </div>
+</div>
+{% endblock %}

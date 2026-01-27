@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Insights - SCAM DNA{% endblock %}
+
+{% block content %}
+<div class="insights-page">
+    <div class="page-header">
+        <h2>Global Insights & Predictions</h2>
+        <p>System-wide patterns and defensive recommendations</p>
+    </div>
+
+    <div class="insights-container">
+        <div class="insight-card">
+            <h3>Scam Category Distribution</h3>
+            {% if insights.category_distribution %}
+            <div class="category-chart">
+                {% for category in insights.category_distribution %}
+                <div class="category-row">
+                    <span class="category-name">{{ category.category }}</span>
+                    <div class="category-bar">
+                        <div class="category-fill" style="width: {{ (category.count / insights.category_distribution[0].count * 100) | int }}%"></div>
+                    </div>
+                    <span class="category-count">{{ category.count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>No data available yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="insight-card">
+            <h3>Most Active Families</h3>
+            {% if insights.top_families %}
+            <div class="families-list">
+                {% for family in insights.top_families[:5] %}
+                <div class="family-row">
+                    <a href="{{ url_for('main.family_detail', family_id=family.id) }}">
+                        {{ family.name }}
+                    </a>
+                    <span class="family-count">{{ family.message_count }} messages</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>No families detected yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="insight-card">
+            <h3>Mutation Activity Timeline</h3>
+            {% if insights.mutation_timeline %}
+            <div class="timeline-chart">
+                {% for day in insights.mutation_timeline[:10] %}
+                <div class="timeline-row">
+                    <span class="timeline-date">{{ day.date }}</span>
+                    <div class="timeline-bar">
+                        <div class="timeline-fill" style="width: {{ ((day.mutations / insights.mutation_timeline[0].mutations) * 100) | int }}%;"></div>
+                    </div>
+                    <span class="timeline-count">{{ day.mutations }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>No mutation data available yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="insight-card recommendations">
+            <h3>Defensive Recommendations</h3>
+            <ul class="recommendations-list">
+                {% for recommendation in insights.recommendations %}
+                <li>{{ recommendation }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

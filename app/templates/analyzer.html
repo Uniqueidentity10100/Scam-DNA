@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Analyzer - SCAM DNA{% endblock %}
+
+{% block content %}
+<div class="analyzer-page">
+    <div class="page-header">
+        <h2>Scam DNA Analyzer</h2>
+        <p>Analyze message patterns and extract scam signatures</p>
+    </div>
+
+    <div class="analyzer-container">
+        <div class="input-section">
+            <h3>Submit Message for Analysis</h3>
+            <form id="analyzerForm">
+                <textarea 
+                    id="messageInput" 
+                    placeholder="Paste the suspected scam message here...&#10;&#10;Examples:&#10;- Phishing emails&#10;- Suspicious SMS&#10;- Social media scams&#10;- Job offer frauds&#10;- Crypto investment schemes"
+                    rows="10"
+                    required
+                ></textarea>
+                
+                <button type="submit" class="btn-primary" id="analyzeBtn">
+                    <span class="btn-text">Analyze Message</span>
+                    <span class="btn-loading" style="display: none;">Analyzing...</span>
+                </button>
+            </form>
+        </div>
+
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <h3>Analysis Results</h3>
+            
+            <div class="result-card">
+                <h4>DNA Code</h4>
+                <div class="dna-code" id="dnaCode"></div>
+            </div>
+
+            <div class="result-card">
+                <h4>Classification</h4>
+                <div class="category-badge" id="category"></div>
+                <div class="mutation-info">
+                    <span id="mutationType"></span>
+                    <span id="mutationScore"></span>
+                </div>
+            </div>
+
+            <div class="result-card">
+                <h4>Detected Patterns</h4>
+                <div class="patterns-grid">
+                    <div>
+                        <strong>Emotional Signals:</strong>
+                        <ul id="emotionalSignals"></ul>
+                    </div>
+                    <div>
+                        <strong>Structural Markers:</strong>
+                        <ul id="structuralMarkers"></ul>
+                    </div>
+                    <div>
+                        <strong>Linguistic Patterns:</strong>
+                        <ul id="linguisticPatterns"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-card">
+                <h4>Family Assignment</h4>
+                <p id="familyInfo"></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/analyzer.js') }}"></script>
+{% endblock %}

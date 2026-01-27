@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SCAM DNA{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>SCAM DNA</h1>
+                <p class="tagline">Decode the genetic code of scams</p>
+            </div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('main.index') }}" class="{% if request.endpoint == 'main.index' %}active{% endif %}">Dashboard</a></li>
+                <li><a href="{{ url_for('main.analyzer') }}" class="{% if request.endpoint == 'main.analyzer' %}active{% endif %}">Analyzer</a></li>
+                <li><a href="{{ url_for('main.timeline') }}" class="{% if request.endpoint == 'main.timeline' %}active{% endif %}">Timeline</a></li>
+                <li><a href="{{ url_for('main.families') }}" class="{% if request.endpoint == 'main.families' %}active{% endif %}">Families</a></li>
+                <li><a href="{{ url_for('main.insights') }}" class="{% if request.endpoint == 'main.insights' %}active{% endif %}">Insights</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="disclaimer">
+            ⚠️ This system is for educational and research purposes only. Do not use to create scams.
+        </div>
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 SCAM DNA Research Project | Built for cybersecurity education</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

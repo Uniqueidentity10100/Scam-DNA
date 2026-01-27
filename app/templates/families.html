@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Scam Families - SCAM DNA{% endblock %}
+
+{% block content %}
+<div class="families-page">
+    <div class="page-header">
+        <h2>Scam Families</h2>
+        <p>Clustered groups of related scam campaigns</p>
+    </div>
+
+    <div class="families-container">
+        {% if families %}
+            <div class="families-grid">
+                {% for family in families %}
+                <div class="family-card">
+                    <div class="family-header">
+                        <h3>{{ family.name }}</h3>
+                        <span class="family-id">#{{ family.id }}</span>
+                    </div>
+                    
+                    <div class="family-dna">
+                        <strong>Primary DNA:</strong>
+                        <code>{{ family.primary_dna_code }}</code>
+                    </div>
+                    
+                    <p class="family-description">{{ family.description }}</p>
+                    
+                    <div class="family-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Members:</span>
+                            <span class="stat-value">{{ family.total_messages or family.member_count }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Avg Mutation:</span>
+                            <span class="stat-value">
+                                {% if family.avg_mutation %}
+                                    {{ "%.2f"|format(family.avg_mutation) }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="family-timeline">
+                        <div class="timeline-item">
+                            <span class="timeline-label">First Seen:</span>
+                            <span class="timeline-date">{{ family.first_seen[:10] }}</span>
+                        </div>
+                        <div class="timeline-item">
+                            <span class="timeline-label">Last Seen:</span>
+                            <span class="timeline-date">{{ family.last_seen[:10] }}</span>
+                        </div>
+                    </div>
+                    
+                    <a href="{{ url_for('main.family_detail', family_id=family.id) }}" class="btn-secondary">
+                        View Details
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>No scam families detected yet. Analyze some messages to start building the database.</p>
+                <a href="{{ url_for('main.analyzer') }}" class="btn-primary">Go to Analyzer</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

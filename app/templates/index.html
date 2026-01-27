@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - SCAM DNA{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="page-header">
+        <h2>Research Dashboard</h2>
+        <p>Real-time scam pattern analysis and tracking</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-value">{{ stats.total_messages }}</div>
+            <div class="stat-label">Messages Analyzed</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">🧬</div>
+            <div class="stat-value">{{ stats.total_families }}</div>
+            <div class="stat-label">Scam Families</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">🔄</div>
+            <div class="stat-value">{{ stats.total_mutations }}</div>
+            <div class="stat-label">Mutations Detected</div>
+        </div>
+    </div>
+
+    <div class="quick-actions">
+        <h3>Quick Actions</h3>
+        <div class="action-grid">
+            <a href="{{ url_for('main.analyzer') }}" class="action-card">
+                <div class="action-icon">🔍</div>
+                <h4>Analyze Message</h4>
+                <p>Submit a new scam message for DNA analysis</p>
+            </a>
+            
+            <a href="{{ url_for('main.timeline') }}" class="action-card">
+                <div class="action-icon">📈</div>
+                <h4>View Timeline</h4>
+                <p>Track how scam tactics evolve over time</p>
+            </a>
+            
+            <a href="{{ url_for('main.families') }}" class="action-card">
+                <div class="action-icon">👥</div>
+                <h4>Browse Families</h4>
+                <p>Explore grouped scam campaigns</p>
+            </a>
+            
+            <a href="{{ url_for('main.insights') }}" class="action-card">
+                <div class="action-icon">💡</div>
+                <h4>View Insights</h4>
+                <p>Get predictions and recommendations</p>
+            </a>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <h3>How It Works</h3>
+        <div class="process-steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h4>Submit Message</h4>
+                <p>Paste a suspected scam message into the analyzer</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h4>DNA Extraction</h4>
+                <p>System identifies emotional triggers, structural patterns, and linguistic markers</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h4>Family Matching</h4>
+                <p>Message is compared to existing scams using semantic analysis</p>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <h4>Evolution Tracking</h4>
+                <p>Mutations are logged and trends are analyzed for prediction</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
