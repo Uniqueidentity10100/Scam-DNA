@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}Network Analysis - SCAM DNA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">🕸️ Scam Network Graph</h1>
+    <p class="subtitle">Relationship modeling and family connections</p>
+    
+    <!-- Network Insights -->
+    <div class="insights-grid">
+        <div class="insight-card">
+            <h3>Hub Families</h3>
+            <div class="count">{{ hubs.hub_count }}</div>
+            <p>Highly connected threat families</p>
+        </div>
+        
+        <div class="insight-card">
+            <h3>Fast Spreaders</h3>
+            <div class="count">{{ spreaders.spreader_count }}</div>
+            <p>Rapidly evolving variants</p>
+        </div>
+        
+        <div class="insight-card">
+            <h3>Total Nodes</h3>
+            <div class="count">{{ graph.nodes|length }}</div>
+            <p>Scam families in network</p>
+        </div>
+    </div>
+    
+    <!-- Network Visualization -->
+    <div class="network-container">
+        <div id="network-graph"></div>
+    </div>
+    
+    <!-- Hub Details -->
+    <div class="details-section">
+        <h2>Critical Hubs</h2>
+        <div class="hub-list">
+            {% for hub in hubs.hubs %}
+            <div class="hub-card">
+                <h3>{{ hub.name }}</h3>
+                <div class="hub-stats">
+                    <span class="metric"><strong>Connections:</strong> {{ hub.connection_count }}</span>
+                    <span class="metric"><strong>Centrality:</strong> {{ (hub.centrality * 100)|round(1) }}%</span>
+                </div>
+                <a href="{{ url_for('main.family_detail', family_id=hub.id) }}" class="btn-detail">View Family</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Fast Spreaders -->
+    <div class="details-section">
+        <h2>Fast-Spreading Variants</h2>
+        <div class="spreader-list">
+            {% for spreader in spreaders.spreaders %}
+            <div class="spreader-card">
+                <h3>{{ spreader.name }}</h3>
+                <div class="growth-indicator">
+                    <span class="growth-label">Growth:</span>
+                    <div class="growth-bar">
+                        <div class="growth-fill" style="width: {{ (spreader.growth_rate * 100)|min(100) }}%"></div>
+                    </div>
+                    <span class="growth-value">{{ (spreader.growth_rate * 100)|round(1) }}%</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <button onclick="rebuildNetwork()" class="btn-rebuild">🔄 Rebuild Network</button>
+</div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+// Render network graph
+const graphData = {{ graph|tojson }};
+
+function renderNetwork() {
+    const width = 900;
+    const height = 600;
+    
+    const svg = d3.select("#network-graph")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+    
+    const simulation = d3.forceSimulation(graphData.nodes)
+        .force("link", d3.forceLink(graphData.edges).id(d => d.id).distance(100))
+        .force("charge", d3.forceManyBody().strength(-300))
+        .force("center", d3.forceCenter(width / 2, height / 2));
+    
+    const link = svg.append("g")
+        .selectAll("line")
+        .data(graphData.edges)
+        .enter().append("line")
+        .attr("stroke", "#00ff88")
+        .attr("stroke-opacity", d => d.strength)
+        .attr("stroke-width", d => d.strength * 3);
+    
+    const node = svg.append("g")
+        .selectAll("circle")
+        .data(graphData.nodes)
+        .enter().append("circle")
+        .attr("r", d => 5 + d.centrality * 20)
+        .attr("fill", "#00d9ff")
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended));
+    
+    const label = svg.append("g")
+        .selectAll("text")
+        .data(graphData.nodes)
+        .enter().append("text")
+        .text(d => d.name)
+        .attr("font-size", "10px")
+        .attr("fill", "#fff")
+        .attr("dx", 12)
+        .attr("dy", 4);
+    
+    simulation.on("tick", () => {
+        link
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+        
+        node
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y);
+        
+        label
+            .attr("x", d => d.x)
+            .attr("y", d => d.y);
+    });
+    
+    function dragstarted(event) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        event.subject.fx = event.subject.x;
+        event.subject.fy = event.subject.y;
+    }
+    
+    function dragged(event) {
+        event.subject.fx = event.x;
+        event.subject.fy = event.y;
+    }
+    
+    function dragended(event) {
+        if (!event.active) simulation.alphaTarget(0);
+        event.subject.fx = null;
+        event.subject.fy = null;
+    }
+}
+
+function rebuildNetwork() {
+    fetch('/intelligence/api/network/build')
+        .then(r => r.json())
+        .then(data => {
+            alert('Network rebuilt successfully!');
+            location.reload();
+        });
+}
+
+renderNetwork();
+</script>
+
+<style>
+.insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 30px 0;
+}
+
+.insight-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #00ff88;
+    text-align: center;
+}
+
+.count {
+    font-size: 2.5em;
+    color: #00ff88;
+    font-weight: bold;
+    margin: 15px 0;
+}
+
+.network-container {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 40px 0;
+    display: flex;
+    justify-content: center;
+}
+
+#network-graph {
+    background: #0a0a15;
+    border-radius: 8px;
+}
+
+.details-section {
+    margin: 40px 0;
+}
+
+.hub-list, .spreader-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.hub-card, .spreader-card {
+    background: rgba(0, 255, 136, 0.05);
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #00ff88;
+}
+
+.hub-stats {
+    margin: 15px 0;
+}
+
+.metric {
+    display: block;
+    margin: 8px 0;
+    color: #e0e0e0;
+}
+
+.btn-detail, .btn-rebuild {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #00ff88 0%, #00d9ff 100%);
+    color: #000;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-detail:hover, .btn-rebuild:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+}
+
+.btn-rebuild {
+    margin: 40px auto;
+    display: block;
+}
+
+.growth-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.growth-bar {
+    flex-grow: 1;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.growth-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00ff88 0%, #00d9ff 100%);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.growth-value {
+    font-weight: bold;
+    color: #00ff88;
+    min-width: 50px;
+}
+</style>
+{% endblock %}

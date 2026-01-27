@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Evidence Locker - SCAM DNA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">🔒 Digital Evidence Locker</h1>
+    <p class="subtitle">Forensic-grade record system with integrity verification</p>
+    
+    <div class="evidence-stats">
+        <div class="stat-box">
+            <h3>Total Records</h3>
+            <div class="stat-value">{{ records.total_count }}</div>
+        </div>
+    </div>
+    
+    <div class="records-section">
+        <h2>Evidence Records</h2>
+        <table class="evidence-table">
+            <thead>
+                <tr>
+                    <th>Case ID</th>
+                    <th>Family</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records.records %}
+                <tr>
+                    <td><code>{{ record.case_id }}</code></td>
+                    <td>{{ record.family }}</td>
+                    <td>{{ record.created_at }}</td>
+                    <td>
+                        <a href="{{ url_for('intelligence.evidence_detail', case_id=record.case_id) }}" class="btn-view">View</a>
+                        <button onclick="exportReport('{{ record.case_id }}')" class="btn-export">Export Report</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="integrity-notice">
+        <h3>⚠️ Evidence Integrity</h3>
+        <p>All records include cryptographic hashes and integrity seals. Any modification to the evidence will invalidate the hash, ensuring tamper-evidence.</p>
+        <ul>
+            <li><strong>Evidence Hash:</strong> SHA-256 of complete evidence package</li>
+            <li><strong>Integrity Seal:</strong> Verification seal combining case ID, hash, and timestamp</li>
+            <li><strong>Use Case:</strong> Educational research and threat documentation only</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+function exportReport(caseId) {
+    fetch(`/intelligence/api/evidence/report/${caseId}`)
+        .then(r => r.json())
+        .then(data => {
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${caseId}-report.json`;
+            a.click();
+        });
+}
+</script>
+
+<style>
+.evidence-stats {
+    margin: 30px 0;
+}
+
+.stat-box {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #00ff88;
+    text-align: center;
+    max-width: 300px;
+}
+
+.stat-value {
+    font-size: 2.5em;
+    color: #00ff88;
+    font-weight: bold;
+}
+
+.records-section {
+    margin: 40px 0;
+}
+
+.evidence-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.evidence-table th,
+.evidence-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.evidence-table th {
+    color: #00ff88;
+    font-weight: bold;
+    background: rgba(0, 255, 136, 0.05);
+}
+
+.evidence-table code {
+    background: rgba(0, 255, 136, 0.1);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    color: #00d9ff;
+}
+
+.btn-view, .btn-export {
+    padding: 8px 16px;
+    margin-right: 8px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-view {
+    background: linear-gradient(135deg, #00ff88 0%, #00d9ff 100%);
+    color: #000;
+    font-weight: bold;
+}
+
+.btn-export {
+    background: rgba(255, 255, 255, 0.1);
+    color: #00ff88;
+    border: 1px solid #00ff88;
+}
+
+.btn-view:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+}
+
+.btn-export:hover {
+    background: rgba(0, 255, 136, 0.1);
+}
+
+.integrity-notice {
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 71, 87, 0.1) 100%);
+    padding: 25px;
+    border-radius: 12px;
+    border-left: 4px solid #ff6b6b;
+    margin: 40px 0;
+}
+
+.integrity-notice h3 {
+    color: #ff6b6b;
+    margin-bottom: 15px;
+}
+
+.integrity-notice ul {
+    margin: 15px 0 0 20px;
+}
+
+.integrity-notice li {
+    margin: 10px 0;
+}
+</style>
+{% endblock %}

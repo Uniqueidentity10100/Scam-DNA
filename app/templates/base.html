@@ -20,6 +20,14 @@
                 <li><a href="{{ url_for('main.timeline') }}" class="{% if request.endpoint == 'main.timeline' %}active{% endif %}">Timeline</a></li>
                 <li><a href="{{ url_for('main.families') }}" class="{% if request.endpoint == 'main.families' %}active{% endif %}">Families</a></li>
                 <li><a href="{{ url_for('main.insights') }}" class="{% if request.endpoint == 'main.insights' %}active{% endif %}">Insights</a></li>
+                <li class="dropdown">
+                    <a href="#" class="{% if request.endpoint and request.endpoint.startswith('intelligence.') %}active{% endif %}">Intelligence ▼</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{ url_for('intelligence.network_graph') }}">Network Graph</a></li>
+                        <li><a href="{{ url_for('intelligence.evidence_locker') }}">Evidence Locker</a></li>
+                        <li><a href="{{ url_for('intelligence.institutional_dashboard') }}">Analytics Dashboard</a></li>
+                    </ul>
+                </li>
             </ul>
         </div>
     </nav>

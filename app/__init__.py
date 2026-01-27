@@ -26,8 +26,10 @@ def create_app():
     # Register blueprints
     from app.routes.main_routes import main_bp
     from app.routes.api_routes import api_bp
+    from app.routes.intelligence_routes import bp as intelligence_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(intelligence_bp)
     
     return app

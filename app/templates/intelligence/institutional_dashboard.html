@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Intelligence Dashboard - SCAM DNA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Institutional Analytics Dashboard</h1>
+    
+    <!-- Overview Cards -->
+    <div class="dashboard-grid">
+        <div class="metric-card">
+            <h3>Messages Analyzed</h3>
+            <div class="big-number">{{ metrics.overview.total_messages_period }}</div>
+            <p>{{ metrics.period }}</p>
+        </div>
+        
+        <div class="metric-card">
+            <h3>Threat Families</h3>
+            <div class="big-number">{{ metrics.overview.total_families }}</div>
+            <p class="highlight">+{{ metrics.overview.new_families_period }} new</p>
+        </div>
+        
+        <div class="metric-card">
+            <h3>Unique Patterns</h3>
+            <div class="big-number">{{ awareness.awareness_metrics.unique_scam_patterns }}</div>
+            <p>Pattern diversity</p>
+        </div>
+        
+        <div class="metric-card">
+            <h3>Avg Daily Volume</h3>
+            <div class="big-number">{{ metrics.overview.avg_messages_per_day }}</div>
+            <p>Messages per day</p>
+        </div>
+    </div>
+    
+    <!-- Top Threats -->
+    <div class="intel-section">
+        <h2>Top Active Threat Families</h2>
+        <table class="intel-table">
+            <thead>
+                <tr>
+                    <th>Family Name</th>
+                    <th>Message Count</th>
+                    <th>Last Seen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for family in metrics.top_families %}
+                <tr>
+                    <td><a href="{{ url_for('main.family_detail', family_id=family.id) }}">{{ family.name }}</a></td>
+                    <td>{{ family.message_count }}</td>
+                    <td>{{ family.last_seen }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Confidence Distribution -->
+    <div class="intel-section">
+        <h2>Detection Confidence</h2>
+        <div class="confidence-bars">
+            {% for level, count in metrics.confidence_distribution.items() %}
+            <div class="confidence-bar">
+                <span class="label">{{ level }} Confidence:</span>
+                <div class="bar-container">
+                    <div class="bar bar-{{ level|lower }}" style="width: {{ (count / metrics.overview.total_messages_period * 100)|round }}%"></div>
+                </div>
+                <span class="count">{{ count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Awareness Insights -->
+    <div class="intel-section">
+        <h2>Awareness & Education Metrics</h2>
+        
+        <div class="insight-grid">
+            <div>
+                <h3>Common Attack Stages</h3>
+                <ul class="stage-list">
+                    {% for stage in awareness.common_attack_stages %}
+                    <li>{{ stage.stage }}: <strong>{{ stage.frequency }}</strong> instances</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div>
+                <h3>Regional Distribution</h3>
+                <ul class="region-list">
+                    {% for region in awareness.regional_distribution %}
+                    <li>{{ region.region }}: <strong>{{ region.count }}</strong> families</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        
+        <div class="recommendations-box">
+            <h3>📋 Recommendations</h3>
+            <ul>
+                {% for rec in awareness.recommendations %}
+                <li>{{ rec }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Export Options -->
+    <div class="actions">
+        <button onclick="exportReport(7)" class="btn-primary">Export Weekly Report</button>
+        <button onclick="exportReport(30)" class="btn-secondary">Export Monthly Report</button>
+    </div>
+</div>
+
+<script>
+function exportReport(days) {
+    fetch(`/intelligence/api/institutional/report?days=${days}`)
+        .then(r => r.json())
+        .then(data => {
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `scam-dna-report-${days}days.json`;
+            a.click();
+        });
+}
+</script>
+
+<style>
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 30px 0;
+}
+
+.metric-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #00ff88;
+    text-align: center;
+}
+
+.big-number {
+    font-size: 3em;
+    font-weight: bold;
+    color: #00ff88;
+    margin: 15px 0;
+}
+
+.highlight {
+    color: #00d9ff;
+    font-weight: bold;
+}
+
+.intel-section {
+    margin: 40px 0;
+    background: rgba(255, 255, 255, 0.02);
+    padding: 30px;
+    border-radius: 12px;
+}
+
+.intel-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.intel-table th, .intel-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.intel-table th {
+    color: #00ff88;
+    font-weight: bold;
+}
+
+.confidence-bars {
+    margin-top: 20px;
+}
+
+.confidence-bar {
+    display: flex;
+    align-items: center;
+    margin: 15px 0;
+    gap: 15px;
+}
+
+.label {
+    width: 150px;
+    color: #00d9ff;
+}
+
+.bar-container {
+    flex-grow: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    height: 30px;
+}
+
+.bar {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.5s ease;
+}
+
+.bar-high {
+    background: linear-gradient(90deg, #00ff88 0%, #00d9ff 100%);
+}
+
+.bar-medium {
+    background: linear-gradient(90deg, #ffd700 0%, #ffa500 100%);
+}
+
+.bar-low {
+    background: linear-gradient(90deg, #ff6b6b 0%, #ff4757 100%);
+}
+
+.insight-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin: 20px 0;
+}
+
+.stage-list, .region-list {
+    list-style: none;
+    padding: 0;
+}
+
+.stage-list li, .region-list li {
+    padding: 10px;
+    margin: 8px 0;
+    background: rgba(0, 255, 136, 0.05);
+    border-left: 3px solid #00ff88;
+    border-radius: 4px;
+}
+
+.recommendations-box {
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 217, 255, 0.1) 100%);
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.recommendations-box ul {
+    margin: 15px 0 0 20px;
+}
+
+.recommendations-box li {
+    margin: 10px 0;
+    color: #e0e0e0;
+}
+
+.actions {
+    margin: 40px 0;
+    text-align: center;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 12px 30px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #00ff88 0%, #00d9ff 100%);
+    color: #000;
+    font-weight: bold;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #00ff88;
+    border: 1px solid #00ff88;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(0, 255, 136, 0.3);
+}
+
+.btn-secondary:hover {
+    background: rgba(0, 255, 136, 0.1);
+}
+</style>
+{% endblock %}
