@@ -74,51 +74,174 @@
 
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script>
-// Render network graph
+// Render network graph with enhanced visuals
 const graphData = {{ graph|tojson }};
 
+// Color palette for different family types
+const familyColors = {
+    'Phishing SMS': '#e74c3c',      // Red
+    'Free Offer': '#f39c12',        // Orange
+    'Prize Scam': '#9b59b6',        // Purple
+    'Urgency Scam': '#e67e22',      // Dark Orange
+    'General Spam': '#95a5a6',      // Gray
+    'Malicious Link': '#c0392b',    // Dark Red
+    'Financial Scam': '#d35400',    // Burnt Orange
+    'Account Phishing': '#8e44ad'   // Dark Purple
+};
+
+function getNodeColor(nodeName) {
+    // Try to match family name
+    for (const [family, color] of Object.entries(familyColors)) {
+        if (nodeName.includes(family)) {
+            return color;
+        }
+    }
+    // Default gradient colors based on centrality
+    return '#3498db'; // Blue default
+}
+
 function renderNetwork() {
-    const width = 900;
-    const height = 600;
+    const width = 1000;
+    const height = 700;
+    
+    // Clear any existing SVG
+    d3.select("#network-graph").selectAll("*").remove();
     
     const svg = d3.select("#network-graph")
         .append("svg")
         .attr("width", width)
-        .attr("height", height);
+        .attr("height", height)
+        .attr("viewBox", [0, 0, width, height]);
+    
+    // Add gradient definitions
+    const defs = svg.append("defs");
+    
+    // Glow filter for nodes
+    const filter = defs.append("filter")
+        .attr("id", "glow");
+    filter.append("feGaussianBlur")
+        .attr("stdDeviation", "3")
+        .attr("result", "coloredBlur");
+    const feMerge = filter.append("feMerge");
+    feMerge.append("feMergeNode").attr("in", "coloredBlur");
+    feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+    
+    // Create radial gradients for each node
+    graphData.nodes.forEach((node, i) => {
+        const gradient = defs.append("radialGradient")
+            .attr("id", `gradient-${i}`);
+        const color = getNodeColor(node.name);
+        gradient.append("stop")
+            .attr("offset", "0%")
+            .attr("stop-color", color)
+            .attr("stop-opacity", 0.9);
+        gradient.append("stop")
+            .attr("offset", "100%")
+            .attr("stop-color", color)
+            .attr("stop-opacity", 0.3);
+    });
     
     const simulation = d3.forceSimulation(graphData.nodes)
-        .force("link", d3.forceLink(graphData.edges).id(d => d.id).distance(100))
-        .force("charge", d3.forceManyBody().strength(-300))
-        .force("center", d3.forceCenter(width / 2, height / 2));
+        .force("link", d3.forceLink(graphData.edges).id(d => d.id).distance(150))
+        .force("charge", d3.forceManyBody().strength(-400))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collision", d3.forceCollide().radius(d => 10 + d.centrality * 30));
     
+    // Links with gradient opacity
     const link = svg.append("g")
+        .attr("class", "links")
         .selectAll("line")
         .data(graphData.edges)
         .enter().append("line")
-        .attr("stroke", "#00ff88")
-        .attr("stroke-opacity", d => d.strength)
-        .attr("stroke-width", d => d.strength * 3);
+        .attr("stroke", d => {
+            const sourceColor = getNodeColor(d.source.name || graphData.nodes.find(n => n.id === d.source)?.name);
+            return sourceColor;
+        })
+        .attr("stroke-opacity", d => 0.3 + d.strength * 0.4)
+        .attr("stroke-width", d => 1 + d.strength * 4)
+        .style("stroke-linecap", "round");
     
-    const node = svg.append("g")
-        .selectAll("circle")
+    // Node groups
+    const nodeGroup = svg.append("g")
+        .attr("class", "nodes")
+        .selectAll("g")
         .data(graphData.nodes)
-        .enter().append("circle")
-        .attr("r", d => 5 + d.centrality * 20)
-        .attr("fill", "#00d9ff")
+        .enter().append("g")
         .call(d3.drag()
             .on("start", dragstarted)
             .on("drag", dragged)
             .on("end", dragended));
     
-    const label = svg.append("g")
-        .selectAll("text")
-        .data(graphData.nodes)
-        .enter().append("text")
+    // Outer glow circle
+    nodeGroup.append("circle")
+        .attr("r", d => 15 + d.centrality * 35)
+        .attr("fill", (d, i) => `url(#gradient-${i})`)
+        .attr("opacity", 0.3)
+        .attr("filter", "url(#glow)");
+    
+    // Main node circle
+    nodeGroup.append("circle")
+        .attr("r", d => 8 + d.centrality * 25)
+        .attr("fill", (d, i) => `url(#gradient-${i})`)
+        .attr("stroke", (d, i) => getNodeColor(d.name))
+        .attr("stroke-width", 2)
+        .attr("filter", "url(#glow)")
+        .style("cursor", "pointer")
+        .on("mouseover", function(event, d) {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr("r", d => 12 + d.centrality * 30)
+                .attr("stroke-width", 3);
+        })
+        .on("mouseout", function(event, d) {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr("r", d => 8 + d.centrality * 25)
+                .attr("stroke-width", 2);
+        });
+    
+    // Node labels with background
+    const labelGroup = nodeGroup.append("g")
+        .attr("class", "label-group");
+    
+    labelGroup.append("rect")
+        .attr("x", 15)
+        .attr("y", -10)
+        .attr("width", d => d.name.length * 7 + 10)
+        .attr("height", 20)
+        .attr("fill", "rgba(10, 10, 20, 0.85)")
+        .attr("rx", 4)
+        .attr("stroke", (d, i) => getNodeColor(d.name))
+        .attr("stroke-width", 1);
+    
+    labelGroup.append("text")
         .text(d => d.name)
-        .attr("font-size", "10px")
+        .attr("x", 20)
+        .attr("y", 3)
+        .attr("font-size", "12px")
+        .attr("font-weight", "500")
         .attr("fill", "#fff")
-        .attr("dx", 12)
-        .attr("dy", 4);
+        .style("pointer-events", "none");
+    
+    // Connection count badge
+    nodeGroup.append("circle")
+        .attr("cx", d => 5 + d.centrality * 20)
+        .attr("cy", d => -5 - d.centrality * 20)
+        .attr("r", 8)
+        .attr("fill", "#ff4757")
+        .attr("stroke", "#2f3542")
+        .attr("stroke-width", 2);
+    
+    nodeGroup.append("text")
+        .attr("x", d => 5 + d.centrality * 20)
+        .attr("y", d => -2 - d.centrality * 20)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "9px")
+        .attr("font-weight", "bold")
+        .attr("fill", "#fff")
+        .text(d => d.connection_count || 0);
     
     simulation.on("tick", () => {
         link
@@ -127,13 +250,8 @@ function renderNetwork() {
             .attr("x2", d => d.target.x)
             .attr("y2", d => d.target.y);
         
-        node
-            .attr("cx", d => d.x)
-            .attr("cy", d => d.y);
-        
-        label
-            .attr("x", d => d.x)
-            .attr("y", d => d.y);
+        nodeGroup
+            .attr("transform", d => `translate(${d.x},${d.y})`);
     });
     
     function dragstarted(event) {
@@ -175,50 +293,192 @@ renderNetwork();
 }
 
 .insight-card {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.1) 0%, rgba(142, 68, 173, 0.1) 100%);
     padding: 25px;
     border-radius: 12px;
-    border: 1px solid #00ff88;
+    border: 1px solid rgba(52, 152, 219, 0.3);
     text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.insight-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(52, 152, 219, 0.1), transparent);
+    transform: rotate(45deg);
+    transition: all 0.5s ease;
+}
+
+.insight-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(52, 152, 219, 0.6);
+    box-shadow: 0 10px 30px rgba(52, 152, 219, 0.2);
+}
+
+.insight-card:hover::before {
+    left: 100%;
+}
+
+.insight-card:nth-child(1) {
+    border-color: rgba(231, 76, 60, 0.3);
+}
+
+.insight-card:nth-child(1):hover {
+    border-color: rgba(231, 76, 60, 0.6);
+    box-shadow: 0 10px 30px rgba(231, 76, 60, 0.2);
+}
+
+.insight-card:nth-child(2) {
+    border-color: rgba(243, 156, 18, 0.3);
+}
+
+.insight-card:nth-child(2):hover {
+    border-color: rgba(243, 156, 18, 0.6);
+    box-shadow: 0 10px 30px rgba(243, 156, 18, 0.2);
+}
+
+.insight-card:nth-child(3) {
+    border-color: rgba(46, 204, 113, 0.3);
+}
+
+.insight-card:nth-child(3):hover {
+    border-color: rgba(46, 204, 113, 0.6);
+    box-shadow: 0 10px 30px rgba(46, 204, 113, 0.2);
 }
 
 .count {
-    font-size: 2.5em;
-    color: #00ff88;
+    font-size: 3em;
+    background: linear-gradient(135deg, #3498db, #9b59b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     font-weight: bold;
     margin: 15px 0;
+    text-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
+}
+
+.insight-card:nth-child(1) .count {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.insight-card:nth-child(2) .count {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.insight-card:nth-child(3) .count {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .network-container {
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 12px;
-    padding: 20px;
+    background: linear-gradient(135deg, rgba(10, 10, 21, 0.8) 0%, rgba(15, 15, 30, 0.9) 100%);
+    border-radius: 16px;
+    padding: 30px;
     margin: 40px 0;
     display: flex;
     justify-content: center;
+    border: 1px solid rgba(52, 152, 219, 0.2);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.network-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(52, 152, 219, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 50%, rgba(155, 89, 182, 0.1) 0%, transparent 50%);
+    pointer-events: none;
 }
 
 #network-graph {
     background: #0a0a15;
-    border-radius: 8px;
+    border-radius: 12px;
+    border: 1px solid rgba(52, 152, 219, 0.1);
+    position: relative;
+}
+
+#network-graph svg {
+    border-radius: 12px;
 }
 
 .details-section {
     margin: 40px 0;
 }
 
+.details-section h2 {
+    margin-bottom: 20px;
+    color: #3498db;
+    font-size: 1.8em;
+}
+
 .hub-list, .spreader-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 20px;
     margin-top: 20px;
 }
 
 .hub-card, .spreader-card {
-    background: rgba(0, 255, 136, 0.05);
-    padding: 20px;
-    border-radius: 8px;
-    border-left: 4px solid #00ff88;
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.05) 0%, rgba(192, 57, 43, 0.05) 100%);
+    padding: 25px;
+    border-radius: 12px;
+    border-left: 4px solid #e74c3c;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.hub-card::before, .spreader-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, #e74c3c, #c0392b);
+    transition: width 0.3s ease;
+}
+
+.hub-card:hover, .spreader-card:hover {
+    transform: translateX(5px);
+    box-shadow: -5px 5px 20px rgba(231, 76, 60, 0.2);
+}
+
+.hub-card:hover::before, .spreader-card:hover::before {
+    width: 100%;
+    opacity: 0.1;
+}
+
+.spreader-card {
+    background: linear-gradient(135deg, rgba(243, 156, 18, 0.05) 0%, rgba(230, 126, 34, 0.05) 100%);
+    border-left-color: #f39c12;
+}
+
+.spreader-card::before {
+    background: linear-gradient(180deg, #f39c12, #e67e22);
+}
+
+.hub-card h3, .spreader-card h3 {
+    color: #ecf0f1;
+    margin-bottom: 15px;
+    font-size: 1.3em;
 }
 
 .hub-stats {
@@ -227,32 +487,46 @@ renderNetwork();
 
 .metric {
     display: block;
-    margin: 8px 0;
-    color: #e0e0e0;
+    margin: 10px 0;
+    color: #bdc3c7;
+    font-size: 0.95em;
+}
+
+.metric strong {
+    color: #e74c3c;
 }
 
 .btn-detail, .btn-rebuild {
     display: inline-block;
     margin-top: 15px;
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #00ff88 0%, #00d9ff 100%);
-    color: #000;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: #fff;
     text-decoration: none;
-    border-radius: 6px;
-    font-weight: bold;
+    border-radius: 8px;
+    font-weight: 600;
     border: none;
     cursor: pointer;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
 }
 
 .btn-detail:hover, .btn-rebuild:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+    box-shadow: 0 6px 25px rgba(52, 152, 219, 0.5);
+    background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
 }
 
 .btn-rebuild {
     margin: 40px auto;
     display: block;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.btn-rebuild:hover {
+    box-shadow: 0 6px 25px rgba(231, 76, 60, 0.5);
+    background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
 }
 
 .growth-indicator {
@@ -262,25 +536,33 @@ renderNetwork();
     margin-top: 15px;
 }
 
+.growth-label {
+    color: #bdc3c7;
+    font-size: 0.9em;
+}
+
 .growth-bar {
     flex-grow: 1;
-    height: 20px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
     overflow: hidden;
+    border: 1px solid rgba(243, 156, 18, 0.2);
 }
 
 .growth-fill {
     height: 100%;
-    background: linear-gradient(90deg, #00ff88 0%, #00d9ff 100%);
-    border-radius: 10px;
-    transition: width 0.5s ease;
+    background: linear-gradient(90deg, #f39c12 0%, #e67e22 100%);
+    border-radius: 12px;
+    transition: width 0.8s ease;
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
 }
 
 .growth-value {
     font-weight: bold;
-    color: #00ff88;
-    min-width: 50px;
+    color: #f39c12;
+    min-width: 60px;
+    font-size: 1.1em;
 }
 </style>
 {% endblock %}

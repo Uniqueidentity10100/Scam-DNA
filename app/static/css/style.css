@@ -889,6 +889,56 @@ footer .container {
     font-size: 0.9rem;
 }
 
+/* ============ Risk Assessment Boxes ============ */
+.risk-box {
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 20px;
+  font-family: system-ui, sans-serif;
+}
+
+.risk-low {
+  background: #1f2f1f;
+  border: 1px solid #2ecc71;
+  color: #c8f7c5;
+}
+
+.risk-medium {
+  background: #2f2a1f;
+  border: 1px solid #f1c40f;
+  color: #fff3cd;
+}
+
+.risk-high {
+  background: #2f1f1f;
+  border: 1px solid #e67e22;
+  color: #ffd8b0;
+}
+
+.risk-critical {
+  background: #3a1a1a;
+  border: 1px solid #e74c3c;
+  color: #ffd6d6;
+}
+
+.safe-box {
+  padding: 16px;
+  border-radius: 8px;
+  background: #1f2a3a;
+  border: 1px solid #3498db;
+  color: #d6ecff;
+  margin-top: 20px;
+}
+
+.risk-list {
+  margin-top: 10px;
+  padding-left: 18px;
+}
+
+.risk-list li {
+  margin-bottom: 6px;
+}
+
 /* ============ Responsive ============ */
 @media (max-width: 768px) {
     .navbar .container {

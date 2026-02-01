@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard - SCAM DNA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">📊 Institutional Analytics Dashboard</h1>
+    <p class="subtitle">Multi-user analytics and threat intelligence</p>
+    
+    <div class="empty-state">
+        <div class="empty-icon">📈</div>
+        <h2>No Analytics Data Available</h2>
+        <p>The analytics dashboard needs scam messages to generate insights and trends.</p>
+        
+        <div class="empty-instructions">
+            <h3>Get Started:</h3>
+            <ol>
+                <li>Navigate to the <a href="{{ url_for('main.analyzer') }}">Analyzer</a> page</li>
+                <li>Submit scam messages for analysis</li>
+                <li>The system will track metrics over time</li>
+                <li>Return here to see trends, top threats, and awareness metrics</li>
+            </ol>
+            
+            <div class="features-preview">
+                <h4>Dashboard Features:</h4>
+                <ul>
+                    <li>📊 Daily message volume trends</li>
+                    <li>🎯 Top active threat families</li>
+                    <li>📈 Detection confidence distribution</li>
+                    <li>🌍 Regional analysis</li>
+                    <li>⚠️ Attack stage frequency</li>
+                    <li>📑 Exportable reports (weekly/monthly)</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <a href="{{ url_for('main.analyzer') }}" class="btn-primary">Go to Analyzer</a>
+            <a href="{{ url_for('main.index') }}" class="btn-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.empty-state {
+    text-align: center;
+    padding: 60px 40px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.empty-icon {
+    font-size: 5em;
+    margin-bottom: 30px;
+    opacity: 0.5;
+}
+
+.empty-state h2 {
+    font-size: 2em;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.empty-state p {
+    font-size: 1.2em;
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+}
+
+.empty-instructions {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 30px;
+    border-radius: 12px;
+    border-left: 4px solid #00ff88;
+    margin: 40px 0;
+    text-align: left;
+}
+
+.empty-instructions h3 {
+    color: #00ff88;
+    margin-bottom: 20px;
+}
+
+.empty-instructions ol {
+    margin-left: 20px;
+    margin-bottom: 30px;
+}
+
+.empty-instructions li {
+    margin: 15px 0;
+    font-size: 1.1em;
+    line-height: 1.6;
+}
+
+.empty-instructions a {
+    color: #00d9ff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.empty-instructions a:hover {
+    text-decoration: underline;
+}
+
+.features-preview {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.features-preview h4 {
+    color: #00d9ff;
+    margin-bottom: 15px;
+}
+
+.features-preview ul {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.features-preview li {
+    background: rgba(0, 255, 136, 0.05);
+    padding: 12px 15px;
+    border-radius: 6px;
+    font-size: 0.95em;
+}
+
+.action-buttons {
+    margin-top: 40px;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 15px 40px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 1.1em;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #00ff88 0%, #00d9ff 100%);
+    color: #000;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #00ff88;
+    border: 1px solid #00ff88;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(0, 255, 136, 0.3);
+}
+
+.btn-secondary:hover {
+    background: rgba(0, 255, 136, 0.1);
+}
+</style>
+{% endblock %}

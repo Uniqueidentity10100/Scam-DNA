@@ -57,32 +57,38 @@ document.addEventListener('DOMContentLoaded', function() {
         resultsSection.scrollIntoView({ behavior: 'smooth' });
 
         // Display DNA code
-        document.getElementById('dnaCode').textContent = result.dna_code;
+        document.getElementById('dnaCode').textContent = result.dna_code || 'N/A';
 
         // Display category
         const categoryEl = document.getElementById('category');
-        categoryEl.textContent = result.category.replace(/_/g, ' ').toUpperCase();
-        categoryEl.className = `category-badge category-${result.category}`;
+        const category = result.category || 'Unknown';
+        categoryEl.textContent = category.replace(/_/g, ' ').toUpperCase();
+        categoryEl.className = `category-badge category-${category.toLowerCase().replace(/ /g, '-')}`;
 
         // Display mutation info
+        const mutationType = result.mutation_type || 'original';
+        const mutationScore = result.mutation_score || 0;
+        
         document.getElementById('mutationType').textContent = 
-            result.mutation_type.replace(/_/g, ' ').toUpperCase();
+            mutationType.replace(/_/g, ' ').toUpperCase();
         document.getElementById('mutationScore').textContent = 
-            `Mutation Score: ${result.mutation_score}`;
+            `Mutation Score: ${(mutationScore * 100).toFixed(1)}%`;
 
-        // Display signals
-        displaySignals('emotionalSignals', result.signals.emotional);
-        displaySignals('structuralMarkers', result.signals.structural);
-        displaySignals('linguisticPatterns', result.signals.linguistic);
+        // Display signals - handle both direct array and object format
+        const signals = result.signals || {};
+        displaySignals('emotionalSignals', signals.emotional || []);
+        displaySignals('structuralMarkers', signals.structural || []);
+        displaySignals('linguisticPatterns', signals.linguistic || []);
 
         // Display family info
         const familyInfo = document.getElementById('familyInfo');
+        const familyId = result.family_id || 'Unknown';
         familyInfo.innerHTML = `
-            This message has been assigned to <strong>Family #${result.family_id}</strong>.
+            This message has been assigned to <strong>Family #${familyId}</strong>.
             <br>
-            Classification: <strong>${result.mutation_type.replace(/_/g, ' ')}</strong>
-            ${result.mutation_type !== 'original' ? 
-                `(${(result.mutation_score * 100).toFixed(1)}% different from parent)` : 
+            Classification: <strong>${mutationType.replace(/_/g, ' ')}</strong>
+            ${mutationType !== 'original' ? 
+                `(${(mutationScore * 100).toFixed(1)}% different from parent)` : 
                 '(New family lineage)'}
         `;
     }

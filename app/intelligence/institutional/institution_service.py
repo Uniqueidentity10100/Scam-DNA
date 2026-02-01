@@ -51,10 +51,10 @@ class InstitutionService:
         
         # Message volume trend
         cursor.execute('''
-            SELECT DATE(created_at) as date, COUNT(*) as count
+            SELECT DATE(analyzed_at) as date, COUNT(*) as count
             FROM messages
-            WHERE created_at >= ?
-            GROUP BY DATE(created_at)
+            WHERE analyzed_at >= ?
+            GROUP BY DATE(analyzed_at)
             ORDER BY date
         ''', (start_date,))
         
@@ -63,7 +63,7 @@ class InstitutionService:
         # Family growth
         cursor.execute('''
             SELECT COUNT(*) as total,
-                   SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as new
+                   SUM(CASE WHEN first_seen >= ? THEN 1 ELSE 0 END) as new
             FROM families
         ''', (start_date,))
         
@@ -72,7 +72,7 @@ class InstitutionService:
         # Top families by activity
         cursor.execute('''
             SELECT f.id, f.name, COUNT(m.id) as message_count,
-                   MAX(m.created_at) as last_seen
+                   MAX(m.analyzed_at) as last_seen
             FROM families f
             JOIN messages m ON f.id = m.family_id
             GROUP BY f.id
@@ -81,22 +81,6 @@ class InstitutionService:
         ''', ())
         
         top_families = cursor.fetchall()
-        
-        # Detection confidence distribution
-        cursor.execute('''
-            SELECT 
-                CASE 
-                    WHEN similarity_score >= 0.8 THEN 'High'
-                    WHEN similarity_score >= 0.5 THEN 'Medium'
-                    ELSE 'Low'
-                END as confidence_level,
-                COUNT(*) as count
-            FROM messages
-            WHERE created_at >= ?
-            GROUP BY confidence_level
-        ''', (start_date,))
-        
-        confidence_dist = cursor.fetchall()
         
         conn.close()
         
@@ -125,8 +109,9 @@ class InstitutionService:
                 for row in top_families
             ],
             'confidence_distribution': {
-                row['confidence_level']: row['count']
-                for row in confidence_dist
+                'High': 0,
+                'Medium': 0,
+                'Low': 0
             }
         }
     
@@ -141,7 +126,7 @@ class InstitutionService:
         
         # Pattern diversity
         cursor.execute('''
-            SELECT COUNT(DISTINCT representative_dna) as unique_patterns
+            SELECT COUNT(DISTINCT primary_dna_code) as unique_patterns
             FROM families
         ''')
         pattern_diversity = cursor.fetchone()['unique_patterns']

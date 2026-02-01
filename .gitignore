@@ -27,7 +27,7 @@ wheels/
 instance/
 .webassets-cache
 
-# Database
+# Database - Include empty schema, exclude data
 *.db
 *.sqlite
 *.sqlite3
@@ -42,6 +42,18 @@ instance/
 .DS_Store
 Thumbs.db
 
-# Models
+# Models and Cache
 models/
 .cache/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+
+# Data loaders with local paths
+load_spam*.py
+load_database*.py
+DATA_LOADING_SUMMARY.md
